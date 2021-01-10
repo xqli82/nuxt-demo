@@ -1,4 +1,3 @@
-[toc]
 # 1.Nuxt生命周期
 request -> nuxtServerInit -> middleware -> validate() -> asyncData & fetch() -> render -> vue周期(客户端)
 
@@ -22,11 +21,13 @@ request -> nuxtServerInit -> middleware -> validate() -> asyncData & fetch() -> 
 
 ** 跑在客户端的钩子,都可以通过context访问到服务器端的数据 **
 
-## this指向
+context包括:isDev, route, store, env, params, query, req, res, redirect, error
+
+## 1.1 this指向
 服务器端:this -> undefined
 客户端:this -> 组件本身
 
-## nuxtServerInit
+## 1.2 nuxtServerInit
 
 在store中,一般会做初始化
 ```
@@ -36,7 +37,7 @@ export const actions ={
     }
 }
 ```
-## middleware
+## 1.3 middleware
 
 1.全局设置
 nuxt.config.js中定义router:
@@ -68,7 +69,7 @@ nuxt.config.js中定义router:
 
 nuxt.config.js -> 匹配布局 -> 匹配页面
 
-## validate
+## 1.4 validate
 + 必须定义在页面组件
 + 主要校验信息
 ```
@@ -83,7 +84,7 @@ validate({params,query}){
     return ture //or false
 }
 ```
-## asyncData & fetch
+## 1.5 asyncData & fetch
 + asyncData 主要用于获取服务端的数据
 ```
 asyncData(){
@@ -100,3 +101,69 @@ fetch({store}){
 }
 ```
 # 2.nuxt 路由
+不需要配置路由,而通过pages下的文件自动生成路由
+
+## 2.1路由级别
+举例:
+```
+pages
+--goods
+----index.vue
+----_id.vue
+```  
+index.vue为一级路由,_id为二级路由  
+## 2.2路由跳转
+```
+<nuxt-link to='/goods'></nuxt-link>   
+<nuxt-link to='/goods/1?a=1&b=2'></nuxt-link>   
+<nuxt-link :to="{name:'goods-id',pararms:{id:3},query:{a:1,b:2}}">商品3</nuxt-link>   
+//name: 路由名->其他目录->文件名
+<nuxt/>
+```
+## 2.3 扩展型路由
+在nuxt.config.js 的router项中配置
+```
+router:{
+    //全局路由中间件
+    middleware:'auth',
+    //扩展路由
+    extendRoutes(routes,resolve){
+        routes.push({
+            name:'root',
+            path:'/index',
+            component:resolve(__dirname,'pages/index.vue')
+        })
+    }
+}
+```
+## 2.4目标路由参数校验
+```
+validate({params}){
+    return true //or false
+}
+```
+## 2.5错误页面
+layout目录下创建error.vue
+```
+//error.vue
+
+<template>
+  <div class="container">
+    <h1 v-if="error.statusCode">{{error.message}}</h1>
+    <h1 v-else> 应用发生异常</h1>
+    <button @click="$router.replace('/')">返回首页</button>
+  </div>
+</template>
+
+<script>
+export default {
+    props:['error']
+}
+</script>
+
+<style>
+
+</style>
+
+```
+
